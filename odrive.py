@@ -1,5 +1,10 @@
 ######### Config #########
 
+# UART
+odrv0.config.enable_uart_a = True
+odrv0.config.gpio12_mode = GpioMode.UART_A
+odrv0.config.gpio13_mode = GpioMode.UART_A
+
 # DC power supply config
 odrv0.config.dc_bus_overvoltage_trip_level = 24
 odrv0.config.dc_bus_undervoltage_trip_level = 8
@@ -7,7 +12,7 @@ odrv0.config.dc_max_positive_current = 5
 
 # Lipo config
 bat_n_cells = = 4
-odrv0.config.dc_bus_undervoltage_trip_level = 8
+odrv0.config.dc_bus_undervoltage_trip_level = 8 # 3 for old bat
 odrv0.config.dc_bus_overvoltage_trip_level = 26
 odrv0.config.dc_max_positive_current = 5
 odrv0.config.dc_max_negative_current = -1
@@ -21,10 +26,8 @@ odrv0.axis0.config.motor.resistance_calib_max_voltage = 2.0
 odrv0.axis0.config.calibration_lockin.current = 8 # current used for encoder calibration
 # odrv0.axis0.requested_state = AxisState.MOTOR_CALIBRATION
 
-odrv0.axis0.config.motor.current_soft_max
-odrv0.axis0.config.motor.current_hard_max
-
-odrv0.axis0.controller.config.vel_limit = 4
+odrv0.axis0.config.motor.current_soft_max = 30
+odrv0.axis0.config.motor.current_hard_max = 40
 
 # Encoder config
 odrv0.spi_encoder0.config.mode = SpiEncoderMode.CUI
@@ -45,8 +48,6 @@ odrv0.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
 odrv0.axis0.requested_state = 1 
 
 ######## Control modes ########
-# VELOCITY_CONTROL
-odrv0.axis0.controller.config.control_mode = 2
 
 # POSITION_CONTROL
 # Uses the inner torque loop, the velocity control loop, and the outer position control loop.
@@ -56,20 +57,65 @@ odrv0.axis0.controller.config.control_mode = 3
 
 ###### Input modes ########
 odrv0.axis0.controller.config.input_mode = 1 # passthru
-odrv0.axis0.controller.input_pos # turn
-odrv0.axis0.controller.input_vel # turn/s
-odrv0.axis0.controller.input_torque # Nm
+odrv0.axis0.controller.input_pos = 0 # turn
+odrv0.axis0.controller.input_vel = 0 # turn/s
+odrv0.axis0.controller.input_torque = 0 # Nm
 
 odrv0.axis0.controller.config.input_mode = 3 # position tracking filter
 
 # Tuning
 # Current thru motor linealy relates to torque of motor
 # Position control is a P controller, velocity control is a PI controller
-odrv0.axis0.controller.config.pos_gain
-odrv0.axis0.controller.config.vel_gain
-odrv0.axis0.controller.config.vel_integrator_gain
-odrv0.axis0.controller.config.vel_limit
-odrv0.axis0.controller.config.vel_limit_tolerance
+
+# The higher it is, the lower the posn steady state error
+odrv0.axis0.controller.config.pos_gain = 15
+
+# Increasing it any more would make the motor too jerky (risks too much DC current being pulled)
+# Decreasing it any more would increase the posn steady state error
+odrv0.axis0.controller.config.vel_gain = 0.1
+
+# Not needed
+odrv0.axis0.controller.config.vel_integrator_gain = 0
+
+odrv0.axis0.controller.config.vel_limit = 5 # if velocity exceeds limit will error!!!
+odrv0.axis0.controller.config.vel_limit_tolerance = 2
+
+# System monitoring
 start_liveplotter(lambda:[odrv0.axis0.pos_vel_mapper.pos_rel, odrv0.axis0.controller.pos_setpoint])
+odrv0.axis0.pos_vel_mapper.pos_rel # relative n since startup in turns
+odrv0.axis0.pos_vel_mapper.pos_abs # counts
+odrv0.axis0.pos_vel_mapper.vel # turn/s
+odrv0.axis0.foc.Iq_setpoint # commanded motor current (A)
+odrv0.axis0.foc.Iq_measured # measured motor current (A)
+# torque (Nm) = 8.27*current/KV
 
 odrv0.save_configuration()
+
+time.sleep(3)
+odrv0.axis0.controller.input_pos = 1
+time.sleep(1)
+odrv0.axis0.controller.input_pos = 0
+time.sleep(1)
+odrv0.axis0.controller.input_pos = 0.5
+time.sleep(0.6)
+odrv0.axis0.controller.input_pos = 1
+time.sleep(0.6)
+odrv0.axis0.controller.input_pos = 0.5
+time.sleep(0.6)
+odrv0.axis0.controller.input_pos = 0
+time.sleep(0.3)
+odrv0.axis0.controller.input_pos = 0.25
+time.sleep(0.3)
+odrv0.axis0.controller.input_pos = 0.5
+time.sleep(0.3)
+odrv0.axis0.controller.input_pos = 0.75
+time.sleep(0.3)
+odrv0.axis0.controller.input_pos = 1
+time.sleep(0.3)
+odrv0.axis0.controller.input_pos = 0.75
+time.sleep(0.3)
+odrv0.axis0.controller.input_pos = 0.5
+time.sleep(0.3)
+odrv0.axis0.controller.input_pos = 0.25
+time.sleep(0.3)
+odrv0.axis0.controller.input_pos = 0
