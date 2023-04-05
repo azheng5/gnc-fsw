@@ -26,14 +26,20 @@ odrv0.axis0.config.motor.resistance_calib_max_voltage = 2.0
 odrv0.axis0.config.calibration_lockin.current = 8 # current used for encoder calibration
 # odrv0.axis0.requested_state = AxisState.MOTOR_CALIBRATION
 
-odrv0.axis0.config.motor.current_soft_max = 30
-odrv0.axis0.config.motor.current_hard_max = 40
+odrv0.axis0.config.motor.current_soft_max = 30 #change?
+odrv0.axis0.config.motor.current_hard_max = 40 #change?
 
-# Encoder config
+# SPI config
 odrv0.spi_encoder0.config.mode = SpiEncoderMode.CUI
 odrv0.spi_encoder0.config.ncs_gpio = 17
 odrv0.axis0.config.load_encoder = EncoderId.SPI_ENCODER0
 odrv0.axis0.config.commutation_encoder = EncoderId.SPI_ENCODER0
+
+#AMT212 config
+odrv0.amt21_encoder_group0.config.event_driven_mode = True
+odrv0.amt21_encoder_group0.config.enable = True
+odrv0.axis0.config.load_encoder = EncoderId.AMT21_ENCODER0
+odrv0.axis0.config.commutation_encoder = EncoderId.AMT21_ENCODER0
 
 ######### Axis states #########
 
