@@ -1,5 +1,5 @@
-#ifndef PID_CONTROLLER_H //?
-#define PID_CONTROLLER_H //?
+#include <stdio.h>
+#include <stdlib.h>
 
 /****** PID CONTROLLER *******/
 
@@ -22,7 +22,7 @@ typedef struct {
 	float integral;
 	float prev_error; // for calculating integral term
 
-    /* Controller output */
+    /* Controller outputs */
 	float out;
 } PIDController;
 
@@ -45,5 +45,3 @@ typedef struct {
 
 /* Calculates the theta euler angle when given an angular rate measurement from the rate gyro*/
 float Attitude_Update(Attitude *atd, float P, float Q, float R);
-
-#endif
