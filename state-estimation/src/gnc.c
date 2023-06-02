@@ -33,7 +33,7 @@ float PIDController_Update(PIDController *pid, float setpoint, float measured_st
     return pid->out;
 }
 
-float Attitude_Update(Attitude *atd, float P, float Q, float R) {
+float Attitude_Update(Attitude* atd, float P, float Q, float R) {
 
     /* Get time derivs of euler angles (NOT the same as body rates PQR) */
     float phi_dot = P + sin(atd->phi)*tan(atd->theta)*Q + cos(atd->phi)*tan(atd->theta)*R;
