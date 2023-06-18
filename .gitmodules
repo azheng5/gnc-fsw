@@ -1,3 +1,3 @@
-[submodule "state-estimation-py"]
-	path = state-estimation-py
-	url = https://github.com/azheng5/state-estimation-py.git
+[submodule "state-esty"]
+	path = state-esty
+	url = https://github.com/azheng5/state-esty.git
