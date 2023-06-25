@@ -10,6 +10,7 @@
 #define PID_INTEGRAL_MIN -5.0f // min integral term
 #define PID_INTEGRAL_MAX  5.0f // max integral term
 #define TIME_STEP 0.05f // delay (longer than actuation response)
+// do i want to define servo limits tho...
 #define SERVO1_MIN -0.4f // minimum motor positon (turns)
 #define SERVO1_MAX  0.4f // maximum motor position (turns)
 #define SERVO2_MIN -0.4f // minimum motor positon (turns)
@@ -20,7 +21,7 @@ Servo servo_yaw;
 //TODO: initialize GPS
 //TODO: initialize GPS
 
-struct {
+struct typedef {
     bool Idle;
     bool Armed;
     bool FastAscent;
