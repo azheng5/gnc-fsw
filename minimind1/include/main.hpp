@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <Servo.h>
@@ -19,19 +21,32 @@
 Servo servo_pitch;
 Servo servo_yaw;
 //TODO: initialize GPS
-//TODO: initialize GPS
 
-struct typedef {
-    bool Idle;
-    bool Armed;
-    bool FastAscent;
-    bool SlowAscent;
-    bool FreeFall;
-    bool Chute;
-    bool Landed;
-} StateMachine;
+typedef enum StateMachine_t {
+    Armed=0, // arm TVC?
+    FastAscent=1, // enable TVC
+    SlowAscent=2, // disable TVC
+    FreeFall=3,
+    Chute=4,
+    Landed=5
+} StateMachine_t;
 
-Read_State_Estimate();
+typedef struct RocketState_t {
+    float pos_z; // m
+    float vel_z; // m/s
+    float accel_z; // m/s^2
+    float roll; // rad
+    float roll_rate;
+    float roll_accel;
+    float pitch;
+    float pitch_rate;
+    float pitch_accel;
+    float yaw;
+    float yaw_rate;
+    float yaw_accel;
+} RocketState_t;
+
+void Read_State_Estimate(int pin);
 
 Fire_Pyro();
 
