@@ -11,6 +11,7 @@ typedef struct {
     /* Controller gains */
 	float Kp; // proportional term
 	float Ki; // integral term
+    float Kd; // derivative term
 
     /* Control limits */
 	float lim_min; // min controller output limit
@@ -21,6 +22,8 @@ typedef struct {
     /* Integrator values */
 	float integral;
 	float prev_error; // for calculating integral term
+
+    float derivative;
 
     /* Controller outputs */
 	float out;
