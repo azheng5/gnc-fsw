@@ -1,4 +1,6 @@
 #include "../include/main.hpp"
+//required for eigen library, change to actual directory
+//#include "../../eigen-3.4.0"
 
 void Read_State_Estimate(int pin) {
     /**
@@ -6,6 +8,34 @@ void Read_State_Estimate(int pin) {
     */
    //TODO maybe shouldnt make it void and have it return a success/failure status
 };
+/**
+matrixXd kalman_gain(matrixXd covariance_prev) {
+    kalman_gain = (covariance_prev*observation.transpose())*((observation*covariance_prev*observation.transpose() + measurement_covariance).inverse());
+    return kalman_gain;
+};
+
+void update_state(vectorXd state, vectorXd state_prev, matrixXd covariance_prev, matrixXd measurement) {
+    K = kalman_gain(covariance_prev);
+    state_crrent = state_prev + K*(measurement - observation*state_prev);
+};
+
+void update_covariance(matrixXd covariance_prev) {
+    K = kalman_gain(covariance_prev);
+    covariance = (identity - K*observation)*covariance_prev*(identity - K*observation).transpose() + K*measurement_covariance*K.transpose();
+};
+
+void predict_state(matrixXd state_current) {
+    if (control_input && control_matrix) {
+        state_future = state_transition*state_current + control_matrix*control_input;
+    } else {
+        state_future = state_transition*state_current;
+    };
+};
+
+void predict_covariance(matrixXd covariance_current, matrixXd state_transition, matrixXd process_noise) {
+    covariance_future = (state_transition*covariance_current)*state_transition.transpose() + process_noise;
+};
+**/
 
 Update_Time() {};
 
