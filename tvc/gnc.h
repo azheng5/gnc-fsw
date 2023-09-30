@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "Eigen/Dense"
 
 /****** PID CONTROLLER *******/
 
@@ -32,6 +33,14 @@ typedef struct {
 /* Used to update PID controller each iteration*/
 float PIDController_Update(PIDController* pid, float setpoint, float measured_state);
 
+// convert Euler angles to quaternions
+void Euler2Quat(float phi, float theta, float psi, Eigen::Quaterniond q_eigen);
+
+auto interpolateThrust(float time_elapsed);
+
+auto momentToAngle(float moment_z, float moment_y, float d, float T);
+
+auto PIDQuat(Eigen::Quaterniond cur_quat, PIDController pidmomentz, PIDController pidmomenty);
 
 /****** ATTITUDE ******/
 
@@ -45,6 +54,7 @@ typedef struct {
     float prev_theta;
     float prev_psi;
 } Attitude;
+
 
 /* Calculates the theta euler angle when given an angular rate measurement from the rate gyro*/
 float Attitude_Update(Attitude *atd, float P, float Q, float R);

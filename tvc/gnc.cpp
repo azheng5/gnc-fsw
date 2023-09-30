@@ -1,8 +1,38 @@
 #include "gnc.h"
 #include <iostream>
 #include "Eigen/Dense"
+#include <map>
+
 
 using namespace std;
+
+std::map<float, float> thrust_curve = {
+    {0.005, 0.1561},
+    {0.032, 1.6720},
+    {0.043, 5.2585},
+    {0.078, 21.9365},
+    {0.15, 24.0015},
+    {0.33, 28.2116},
+    {0.478, 31.0011},
+    {0.502, 31.2631},
+    {0.644, 15.2447},
+    {0.876, 12.2725},
+    {1.164, 11.4507},
+    {1.755, 10.6790},
+    {3.003, 10.1589},
+    {4.025, 9.8697},
+    {5.141, 9.9547},
+    {6.725, 10.9102},
+    {8.856, 12.0202},
+    {11.232, 12.7126},
+    {12.01, 11.3399},
+    {12.19, 9.2100},
+    {12.261, 6.9116},
+    {12.344, 4.5435},
+    {12.472, 1.5521},
+    {12.568, 0.2906},
+    {12.601, 0}
+};
 
 float PIDController_Update(PIDController *pid, float setpoint, float measured_state) {
 
@@ -52,13 +82,22 @@ void Euler2Quat(float phi, float theta, float psi, Eigen::Quaterniond q_eigen) {
 }   
 
 // return thrust T according to simulated thrust curve
-auto calcSimThrust(float time_elapsed) {
+auto interpolateThrust(float time_elapsed) {
 
-    float T = 0;
+    typedef std::map<float, float>::iterator it_type;
 
-    // thrust curve calcs
+    it_type it = thrust_curve.upper_bound(time_elapsed);
 
-    return T;
+    if(it == thrust_curve.end()) {
+        return (--it)->second;
+    } else if (it == thrust_curve.begin()) {
+        return it->second;
+    }
+    it_type it2 = it;
+    --it2;
+
+    const float delta = (time_elapsed - it2->first) / (it->first - it2->first);
+    return delta*it->second + (1-delta)*it2->second;
 
 }
 

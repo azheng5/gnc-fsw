@@ -23,7 +23,10 @@ Read_Battery() {};
 
 Log_SD_Card() {};
 
-Control_TVC() {};
+// import gnc.
+Control_TVC() {
+
+};
 
 // Check_GPS_Lock() {};
 
