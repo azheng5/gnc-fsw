@@ -7,25 +7,13 @@ void Read_State_Estimate(int pin) {
    //TODO maybe shouldnt make it void and have it return a success/failure status
 };
 
-Fire_Pyro() {
-    /**
-     * 
-    */
-
-   //TODO when firing pyro channels for the 2nd or 3rd time increase the voltage?
-};
-
 Update_Time() {};
-
-Update_LED() {};
 
 Read_Battery() {};
 
 Log_SD_Card() {};
 
 Control_TVC() {};
-
-// Check_GPS_Lock() {};
 
 void setup() {
 
@@ -43,14 +31,13 @@ void loop() {
 
     Read_State_Estimate(&state_vector);
     Read_Battery();
-    Update_LED();
 
     //TODO in general do more condition checks for better redundancy
     switch(StateMachine) {
 
         // if still in static estimation, calling Read_State_Estimate() will simply not do anything
+        // ^ during static estimation SE teensy sends null values thru serial
         case (Armed):
-            Read_Battery();
 
             if (state_vector.accel_z > 10.0f) {
                 delay(0.1); //TODO figure out how much more useful it will be to use timer to enable the rest of the program to execute while the delay is occurring

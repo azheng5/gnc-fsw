@@ -1,5 +1,3 @@
-#pragma once
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <Servo.h>
@@ -20,7 +18,6 @@
 
 Servo servo_pitch;
 Servo servo_yaw;
-//TODO: initialize GPS
 
 typedef enum StateMachine_t {
     Armed=0, // arm TVC?
@@ -32,32 +29,30 @@ typedef enum StateMachine_t {
 } StateMachine_t;
 
 typedef struct RocketState_t {
-    float pos_z; // m
-    float vel_z; // m/s
-    float accel_z; // m/s^2
-    float roll; // rad
-    float roll_rate;
-    float roll_accel;
+
+    float pos_x; // m
+    float pos_y;
+    float pos_z;
+    float pos_z; 
+    float vel_x; // m/s
+    float vel_y;
+    float vel_z;
+    float accel_x; // m/s^2
+    float accel_y;
+    float accel_z;
+
     float pitch;
-    float pitch_rate;
-    float pitch_accel;
     float yaw;
+    float roll;
+    float pitch_rate
+    float roll_rate;
     float yaw_rate;
-    float yaw_accel;
 } RocketState_t;
 
 void Read_State_Estimate(int pin);
-
-Fire_Pyro();
-
-Update_Time();
-
-Update_LED();
 
 Read_Battery();
 
 Log_SD_Card();
 
 Control_TVC();
-
-Check_GPS_Lock();
