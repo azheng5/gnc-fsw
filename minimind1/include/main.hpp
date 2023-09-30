@@ -4,17 +4,22 @@
 
 #include <HardwareSerial.h>
 
-#define PID_KP  2.0f // proportional gain
-#define PID_KI  0.5f // integral gain
-#define PID_KD  0.5f // integral gain
-#define PID_INTEGRAL_MIN -5.0f // min integral term
-#define PID_INTEGRAL_MAX  5.0f // max integral term
-#define TIME_STEP 0.05f // delay (longer than actuation response)
-// do i want to define servo limits tho...
-#define SERVO1_MIN -0.4f // minimum motor positon (turns)
-#define SERVO1_MAX  0.4f // maximum motor position (turns)
-#define SERVO2_MIN -0.4f // minimum motor positon (turns)
-#define SERVO2_MAX  0.4f // maximum motor position (turns)
+// PID variables
+#define PID_KP  1.0f // proportional gain
+#define PID_KI  0.0f // integral gain
+#define PID_KD  1.0f // integral gain
+#define PID_INTEGRAL_MIN -5.0f // min integral term (Nm)
+#define PID_INTEGRAL_MAX 5.0f // max integral term (Nm)
+#define PID_TIME_STEP 0.05f // delay (longer than actuation response)
+#define SERVO1_MIN -10.0f // minimum motor positon (degrees)
+#define SERVO1_MAX  10.0f // maximum motor position
+#define SERVO2_MIN -10.0f // minimum motor positon
+#define SERVO2_MAX  10.0f // maximum motor position
+
+#define MOMENT_ARM 0.3f //
+
+// LKF variables
+#define LKF_TIME_STEP
 
 Servo servo_pitch;
 Servo servo_yaw;
@@ -33,7 +38,6 @@ typedef struct RocketState_t {
     float pos_x; // m
     float pos_y;
     float pos_z;
-    float pos_z; 
     float vel_x; // m/s
     float vel_y;
     float vel_z;

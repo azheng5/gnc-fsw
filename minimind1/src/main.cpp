@@ -47,6 +47,8 @@ Control_TVC() {};
 
 void setup() {
 
+    // start global timer
+
     servo_pitch.attach(); //TODO: fill this out
     servo_yaw.attach(); //TODO: fill this out
 
@@ -69,10 +71,27 @@ void loop() {
         // ^ during static estimation SE teensy sends null values thru serial
         case (Armed):
 
-            if (state_vector.accel_z > 10.0f) {
-                delay(0.1); //TODO figure out how much more useful it will be to use timer to enable the rest of the program to execute while the delay is occurring
-                Read_State_Estimate(&state_vector);
-                if (state_vector.pos_z > 10.0f) {
+            if (state_vector.accel_z > 10.0f && state_vector.pos_z > 1.0f) {
+                
+                // get current time
+                Read_State_Estimate()
+
+                // get later time
+
+                // difference
+
+                if () {
+
+
+
+                }
+
+                while (state_vector.accel_z > 10.0f && state_vector.pos_z > 1.5f) {
+                    delay(0.1);
+                    time += 0.1;
+                    Read_State_Estimate(&state_vector);
+                }
+                if (time > 1) {
                     StateMachine = FastAscent;
                 }
             }
@@ -80,7 +99,9 @@ void loop() {
 
         case (FastAscent):
             delay(TIME_STEP); //at least longer than time response
-            Control_TVC();
+
+            Control_TVC(&state_vector);
+            Fast_Data_Log(&state_vector, /*motor posn*/);
 
             if (state_vector.accel_z < 2.0f) {
                 delay(0.1);
@@ -103,18 +124,16 @@ void loop() {
             break;
 
         case (FreeFall):
-            // currently fire pyro will just be called over and over again until it either succeeds or landing detected
-            int pyro_status = Fire_Pyro(); // returns whether pyro fired successfully
-            if (pyro_status) {
+            if (state_vector.accel_z < value) {
                 //TODO timestamp and log pyro fire event to sd card
                 StateMachine = Chute;
             } else {
 
-                if (state_vector.pos_z < 3.0f) {
+                if (state_vector.pos_z < 5.0f) {
 
                     delay(0.1);
                     Read_State_Estimate(&state_vector);
-                    if (state_vector.pos_z < 3.0f) {
+                    if (state_vector.pos_z < 5.0f) {
                         StateMachine = Landed;
                     }
 
