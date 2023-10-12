@@ -153,7 +153,7 @@ int main() {
 
     auto [moment_z, moment_y] = PIDQuat(q_eigen, pidmomentz, pidmomenty);
 
-    float T = calcSimThrust(0.1); 
+    float T = interpolateThrust(0.1); 
 
     auto [theta, phi] = momentToAngle(moment_z, moment_y, d, T);
 
