@@ -1,28 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <Servo.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BMP280.h>
+#include <Wire.h>
+// #include <HardwareSerial.h>
 
-#include <HardwareSerial.h>
+///////// main.h /////////
+Adafruit_MPU6050 mpu; // initialize imu
+Adafruit_BMP280 bmp; // initialize bmp
+Adafruit_Sensor *bmp_temp = bmp.getTemperatureSensor();
+Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
 
-// PID variables
-#define PID_KP  1.0f // proportional gain
-#define PID_KI  0.0f // integral gain
-#define PID_KD  1.0f // integral gain
-#define PID_INTEGRAL_MIN -5.0f // min integral term (Nm)
-#define PID_INTEGRAL_MAX 5.0f // max integral term (Nm)
-#define PID_TIME_STEP 0.05f // delay (longer than actuation response)
-#define SERVO1_MIN -10.0f // minimum motor positon (degrees)
-#define SERVO1_MAX  10.0f // maximum motor position
-#define SERVO2_MIN -10.0f // minimum motor positon
-#define SERVO2_MAX  10.0f // maximum motor position
 
-#define MOMENT_ARM 0.3f //
-
-// LKF variables
-#define LKF_TIME_STEP
-
-Servo servo_pitch;
-Servo servo_yaw;
 
 typedef enum StateMachine_t {
     Armed=0, // arm TVC?
@@ -34,29 +25,133 @@ typedef enum StateMachine_t {
 } StateMachine_t;
 
 typedef struct RocketState_t {
-
-    float pos_x; // m
-    float pos_y;
-    float pos_z;
-    float vel_x; // m/s
-    float vel_y;
-    float vel_z;
-    float accel_x; // m/s^2
-    float accel_y;
-    float accel_z;
-
-    float pitch;
-    float yaw;
-    float roll;
-    float pitch_rate
-    float roll_rate;
-    float yaw_rate;
+    double pos_x; // m
+    double pos_y;
+    double pos_z;
+    double vel_x; // m/s
+    double vel_y;
+    double vel_z;
+    double pitch; // rad
+    double yaw;
+    double roll;
+    double pitch_rate // rad/s
+    double roll_rate;
+    double yaw_rate;
 } RocketState_t;
-
-void Read_State_Estimate(int pin);
-
-Read_Battery();
 
 Log_SD_Card();
 
+/////////// PID.h ////////////////
+#define PID_KP  1.0 // proportional gain
+#define PID_KI  0.0 // integral gain
+#define PID_KD  1.0 // integral gain
+#define PID_INTEGRAL_MIN -5.0 // min integral term (Nm)
+#define PID_INTEGRAL_MAX 5.0 // max integral term (Nm)
+#define PID_TIME_STEP 0.05 // delay (longer than actuation response)
+#define SERVO1_MIN -10.0 // minimum motor positon (degrees)
+#define SERVO1_MAX  10.0 // maximum motor position
+#define SERVO2_MIN -10.0 // minimum motor positon
+#define SERVO2_MAX  10.0 // maximum motor position
+
+#define MOMENT_ARM 0.3 // (m)
+
+Servo servo_pitch;
+Servo servo_yaw;
+
 Control_TVC();
+
+/////////// LKF.h /////////////////
+#define LKF_TIME_STEP 0.01
+#define DIM_STATE 4 // quat
+#define DIM_MEASUREMENT 4 // estimated quat from prev iteration (NOT gyro)
+
+Eigen::MatrixXd::Identity(DIM_STATE, DIM_STATE) identity;
+
+Eigen::VectorXd state_current(DIM_STATE); // x_n,n
+Eigen::MatrixXd covariance_current(DIM_STATE,DIM_STATE); // current estimate covariance P_n,n
+Eigen::MatrixXd state_transition(DIM_STATE,DIM_STATE); // state transition F
+Eigen::MatrixXd process_noise(DIM_STATE,DIM_STATE); // process noise covariance Q
+Eigen::MatrixXd observation(DIM_MEASUREMENT,DIM_STATE); // observation matrix H
+Eigen::VectorXd measurement(DIM_MEASUREMENT);
+Eigen::MatrixXd measurement_covariance(DIM_MEASUREMENT,DIM_MEASUREMENT); // measurement covariance R
+
+Eigen::VectorXd state_prev(DIM_STATE); // previously predicted state x_n,n-1
+Eigen::MatrixXd covariance_prev(DIM_STATE,DIM_STATE); //previously predicted covariance matrix P_n,n-1
+
+Eigen::VectorXd state_future(DIM_STATE); // predicted future state x_n+1,n
+Eigen::MatrixXd covariance_future(DIM_STATE,DIM_STATE); // predicted future covariance P_n+1,n
+
+Eigen::MatrixXd kalman_gain(DIM_STATE,DIM_MEASUREMENT);
+
+state_current << 1,0,0,0; //TODO confirm this is 0 angle
+covariance_current = identity;
+// state transition matrix gets updated each iteration
+process_noise << 0.001*identity;
+observation << 1,0,0,0,
+               0,1,0,0,
+               0,0,1,0,
+               0,0,0,1;
+measurement_covariance << 10*identity;
+
+
+
+Eigen::MatrixXd compute_kalman_gain() {
+
+    kalman_gain = (covariance_prev*observation.transpose()) * (( (observation*covariance_prev)*observation.transpose() + measurement_covariance).inverse());
+    return kalman_gain;
+
+};
+
+Eigen::VectorXd update_state() {
+    
+    // compute kalman gain
+    Eigen::MatrixXd kalman_gain(DIM_STATE,DIM_MEASUREMENT);
+    kalman_gain = compute_kalman_gain(covariance_prev);
+
+    // compute current state
+    state_current = state_prev + kalman_gain*(measurement - observation*state_prev);
+    
+    return state_current;
+};
+
+Eigen::MatrixXd update_covariance() {
+    
+    // compute kalman gain
+    Eigen::MatrixXd kalman_gain(DIM_STATE,DIM_MEASUREMENT);
+    kalman_gain = compute_kalman_gain(covariance_prev);
+
+    // compute current covariance
+    covariance_current = (identity - kalman_gain * observation) * covariance_prev * (identity - kalman_gain * observation).transpose() + kalman_gain * measurement_covariance * kalman_gain.transpose();
+
+    return covariance_current;
+
+};
+
+Eigen::MatrixXd predict_state() {
+
+    state_future = state_transition * state_current;
+    return state_future;
+};
+
+Eigen::MatrixXd predict_covariance() {
+    covariance_future = (state_transition*covariance_current)*state_transition.transpose() + process_noise;
+    return covariance_future;
+};
+
+
+Eigen::MatrixXd update_state_transition(double w1, double w2, double w3) {
+    /**
+     * complementary fn for predict_state() and predict_covariance()
+     * state transition matrix needs to be redefined each iteration bc its a fn of rate gyro values
+     * special fn applicable only for quaternion kinematics rn
+    */
+
+   Eigen::Matrix4f omega;
+    omega <<  0, -w1, -w2, -w3,
+              w1,   0,  w3, -w2,
+              w2, -w3,   0,  w1,
+              w3,  w2, -w1,   0;
+    state_transition = identity + LKF_TIME_STEP*0.5*omega;
+
+    return state_transition;
+}
