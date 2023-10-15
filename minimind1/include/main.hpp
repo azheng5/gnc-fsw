@@ -42,6 +42,33 @@ typedef struct RocketState_t {
 Log_SD_Card();
 
 /////////// PID.h ////////////////
+
+typedef struct {
+    /* Time of each iteration */
+    float time_step;
+
+    /* Controller gains */
+	float Kp; // proportional term
+	float Ki; // integral term
+    float Kd; // derivative term
+
+    /* Control limits */
+	float lim_min; // min controller output limit
+	float lim_max; // max controller output limit
+	float integral_lim_min; // min integral output limit
+	float integral_lim_max; // max integral output limit
+
+    /* Integrator values */
+	float integral;
+	float prev_error; // for calculating integral term
+
+    float derivative;
+
+    /* Controller outputs */
+	float out;
+} PIDController;
+
+
 #define PID_KP  1.0 // proportional gain
 #define PID_KI  0.0 // integral gain
 #define PID_KD  1.0 // integral gain
@@ -58,7 +85,14 @@ Log_SD_Card();
 Servo servo_pitch;
 Servo servo_yaw;
 
+PIDController pid_pitch;
+PIDController pid_yaw;
+
 Control_TVC();
+
+PIDController_Update();
+
+PIDQuat();
 
 /////////// LKF.h /////////////////
 #define LKF_TIME_STEP 0.01

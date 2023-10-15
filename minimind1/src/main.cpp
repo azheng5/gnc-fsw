@@ -16,7 +16,75 @@ Read_Battery() {};
 
 Log_SD_Card() {};
 
-Control_TVC() {};
+float PIDController_Update(PIDController *pid, float setpoint, float measured_state) {
+
+    /* Calculate error */
+    float error = setpoint - measured_state;
+
+    /* Calculate proportional term */
+    float proportional = pid->Kp * error;
+
+    /* Calculate integral term */
+    pid->integral = pid->integral + 0.5f * pid->Ki * pid->time_step * (error + pid->prev_error);
+
+	/* Apply integrator limits */
+    if (pid->integral > pid->integral_lim_max) {
+        pid->integral = pid->integral_lim_max;
+    } else if (pid->integral < pid->integral_lim_max) {
+        pid->integral = pid->integral_lim_min;
+    }
+
+    /* Calculate derivative term */
+    pid->derivative = pid->Kd * (error - pid->prev_error) / pid->time_step;
+
+
+    /* Compute output and apply control output limits */
+    pid->out = proportional + pid->integral + pid->derivative;
+    if (pid->out > pid->lim_max) {
+        pid->out = pid->lim_max;
+    } else if (pid->out < pid->lim_min) {
+        pid->out = pid->lim_min;
+    }
+
+	/* Store error */
+    pid->prev_error = error;
+
+	/* Return controller output */
+    return pid->out;
+}
+
+auto PIDQuat(Eigen::Vector3f cur_angle, PIDController pid_pitch, PIDController pid_yaw) {
+
+
+    // set ideal euler angle to point straight up
+    Eigen::Vector3f ideal_angle = {0.0, 1.0, 0.0};
+
+    // calculate error between cur_quat and ideal_quat
+    Eigen::Vector3f error_angle;
+    error_angle = cur_angle - ideal_angle;
+
+    // pitch and yaw
+    float pitch = error_angle[1];
+    float yaw = error_angle[2];
+
+    // update PID controllers with angle, return thrust moment
+    float pitch = PIDController_Update(&pid_pitch, 0, pitch);
+    float yaw = PIDController_Update(&pid_yaw, 0, yaw);
+
+    return std::make_pair(pitch, yaw);
+
+}
+
+
+
+Control_TVC(Eigen::Vector3f eulerAngles) {
+
+    float [pitch, yaw] = PIDQuat( eulerAngles, pid_pitch, pid_yaw);
+
+    // control servos here
+    
+
+};
 
 void setup() {
 
@@ -68,6 +136,17 @@ void setup() {
 
 }
 
+
+float quatToEuler(Eigen::Vector4f q) {
+
+    float roll = atan2(2*(q[0]*q[1] + q[2]*q[3]), 1 - 2*(q[1]*q[1] + q[2]*q[2]));
+    float pitch = asin(2*(q[0]*q[2] - q[3]*q[1]));
+    float yaw = atan2(2*(q[0]*q[3] + q[1]*q[2]), 1 - 2*(q[2]*q[2] + q[3]*q[3]));
+
+    Eigen::Vector3f output = {roll, pitch, yaw};
+    return output;
+}
+
 void loop() {
 
     // Read sensor
@@ -90,7 +169,7 @@ void loop() {
         update_state();
         update_covariance();
 
-        //eulerangles = quat2angle(state_current); // convert estimated quats to euler angles to be used in PID
+        eulerAngles = quatToEuler(state_current); // convert estimated quats to euler angles to be used in PID
 
         update_state_transition(raw_gyro.gyro.x,raw_gyro.gyro.y,raw_gyro.gyro.z);
         predict_state();
@@ -126,7 +205,7 @@ void loop() {
         case (FastAscent):
             delay(TIME_STEP); //at least longer than time response
 
-            Control_TVC(&state_vector);
+            Control_TVC(&eulerAngles);
             Fast_Data_Log(&state_vector, /*motor posn*/);
 
             if (state_vector.accel_z < 2.0) {
