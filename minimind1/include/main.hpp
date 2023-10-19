@@ -40,6 +40,7 @@ typedef struct RocketState_t {
 } RocketState_t;
 
 Log_SD_Card();
+// Log 12 rocket states, timestamp, 2 servo angle cmds, 3 raw gyro, 3 raw accelo, 1 raw altitude
 
 /////////// PID.h ////////////////
 #define PID_KP  1.0 // proportional gain
@@ -64,6 +65,7 @@ Control_TVC();
 #define LKF_TIME_STEP 0.01
 #define DIM_STATE 4 // quat
 #define DIM_MEASUREMENT 4 // estimated quat from prev iteration (NOT gyro)
+#define DIM_INPUT 2 // control inputs (pitch/yaw gimbal angles)
 
 Eigen::MatrixXd::Identity(DIM_STATE, DIM_STATE) identity;
 
@@ -71,6 +73,8 @@ Eigen::VectorXd state_current(DIM_STATE); // x_n,n
 Eigen::MatrixXd covariance_current(DIM_STATE,DIM_STATE); // current estimate covariance P_n,n
 Eigen::MatrixXd state_transition(DIM_STATE,DIM_STATE); // state transition F
 Eigen::MatrixXd process_noise(DIM_STATE,DIM_STATE); // process noise covariance Q
+Eigen::VectorXd control_input(DIM_INPUT); // control input u_n
+Eigen::MatrixXd control_matrix(DIM_STATE,DIM_INPUT); // control matrix G
 Eigen::MatrixXd observation(DIM_MEASUREMENT,DIM_STATE); // observation matrix H
 Eigen::VectorXd measurement(DIM_MEASUREMENT);
 Eigen::MatrixXd measurement_covariance(DIM_MEASUREMENT,DIM_MEASUREMENT); // measurement covariance R
@@ -87,6 +91,8 @@ state_current << 1,0,0,0; //TODO confirm this is 0 angle
 covariance_current = identity;
 // state transition matrix gets updated each iteration
 process_noise << 0.001*identity;
+// control input gets updated with each iteration
+// control_matrix << ???? // TODO figure this out
 observation << 1,0,0,0,
                0,1,0,0,
                0,0,1,0,
@@ -129,7 +135,7 @@ Eigen::MatrixXd update_covariance() {
 
 Eigen::MatrixXd predict_state() {
 
-    state_future = state_transition * state_current;
+    state_future = state_transition * state_current + control_matrix * control_input;
     return state_future;
 };
 

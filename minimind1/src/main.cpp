@@ -2,22 +2,6 @@
 //required for eigen library, change to actual directory
 //#include "../../eigen-3.4.0"
 
-
-void Read_State_Estimate(int pin) {
-    /**
-     * Reads from a hardware serial pin and waits until it has obtained a complete state estimate, or just times out.
-    */
-   //TODO maybe shouldnt make it void and have it return a success/failure status
-};
-
-Update_Time() {};
-
-Read_Battery() {};
-
-Log_SD_Card() {};
-
-Control_TVC() {};
-
 void setup() {
 
     //TODO start global timer
@@ -78,6 +62,7 @@ void loop() {
     
     // Execute LKF
     if (is_first_iteration) {
+        
         double seaLevelhpa = pressure_event.pressure; // set sea lvl pressure at gnd
 
         update_state_transition(raw_gyro.gyro.x,raw_gyro.gyro.y,raw_gyro.gyro.z);
@@ -126,7 +111,7 @@ void loop() {
         case (FastAscent):
             delay(TIME_STEP); //at least longer than time response
 
-            Control_TVC(&state_vector);
+            Control_TVC();
             Fast_Data_Log(&state_vector, /*motor posn*/);
 
             if (state_vector.accel_z < 2.0) {
@@ -151,7 +136,6 @@ void loop() {
 
         case (FreeFall):
             if (state_vector.accel_z < value) {
-                //TODO timestamp and log pyro fire event to sd card
                 StateMachine = Chute;
             } else {
 
